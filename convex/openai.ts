@@ -14,29 +14,24 @@ const openai = new OpenAI({
 
 export const backfillEmbeddings = internalAction({
   handler: async (ctx) => {
-    const recipes = await ctx.runQuery(internal.openai.unembeddedRecipes, {});
-    // const input = recipes.map((recipe) =>
-    //   [recipe.title, recipe.ingredients, recipe.directions].join(" ")
-    // );
-    await Promise.all(
-      recipes.map(async (recipe) => {
-        const input = [
-          recipe.title,
-          recipe.ingredients,
-          recipe.directions,
-        ].join(" ");
-        const response = await openai.embeddings.create({
-          input,
-          model: "text-embedding-ada-002",
-        });
-        const embedding = response.data[0].embedding;
-        console.log("got embedding");
+    let recipes = await ctx.runQuery(internal.openai.unembeddedRecipes, {});
+    while (recipes.length > 0) {
+      const input = recipes.map((recipe) =>
+        [recipe.title, recipe.ingredients, recipe.directions].join(" ")
+      );
+      const response = await openai.embeddings.create({
+        input,
+        model: "text-embedding-ada-002",
+      });
+      for (let i = 0; i < response.data.length; i++) {
+        const embedding = response.data[i].embedding;
         await ctx.runMutation(internal.openai.backfillEmbedding, {
           embedding,
-          recipeId: recipe._id,
+          recipeId: recipes[i]._id,
         });
-      })
-    );
+      }
+      recipes = await ctx.runQuery(internal.openai.unembeddedRecipes, {});
+    }
     return;
   },
 });
@@ -55,7 +50,7 @@ export const unembeddedRecipes = internalQuery({
     const recipes = await ctx.db
       .query("recipes")
       .withIndex("by_embedding", (q) => q.eq("embeddingId", undefined))
-      .take(10);
+      .take(50);
     return recipes;
   },
 });
