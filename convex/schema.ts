@@ -4,10 +4,10 @@ import { v } from "convex/values";
 
 export default defineSchema({
   recipes: defineTable({
-    NER: v.string(),
-    directions: v.string(),
+    NER: v.array(v.string()),
+    directions: v.array(v.string()),
     id: v.float64(),
-    ingredients: v.string(),
+    ingredients: v.array(v.string()),
     link: v.string(),
     source: v.string(),
     title: v.string(),

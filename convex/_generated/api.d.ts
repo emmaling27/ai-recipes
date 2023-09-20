@@ -15,6 +15,7 @@ import type {
   FunctionReference,
 } from "convex/server";
 import type * as auth from "../auth";
+import type * as cleanData from "../cleanData";
 import type * as openai from "../openai";
 import type * as searchRecipes from "../searchRecipes";
 
@@ -28,6 +29,7 @@ import type * as searchRecipes from "../searchRecipes";
  */
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  cleanData: typeof cleanData;
   openai: typeof openai;
   searchRecipes: typeof searchRecipes;
 }>;
