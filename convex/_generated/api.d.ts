@@ -17,6 +17,7 @@ import type {
 import type * as auth from "../auth";
 import type * as cleanData from "../cleanData";
 import type * as openai from "../openai";
+import type * as recipe from "../recipe";
 import type * as searchRecipes from "../searchRecipes";
 
 /**
@@ -31,6 +32,7 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   cleanData: typeof cleanData;
   openai: typeof openai;
+  recipe: typeof recipe;
   searchRecipes: typeof searchRecipes;
 }>;
 export declare const api: FilterApi<
