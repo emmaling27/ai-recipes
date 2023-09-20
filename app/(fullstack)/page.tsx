@@ -1,5 +1,6 @@
 "use client";
 
+import TitleSearch from "@/components/SearchBar";
 import { api } from "@/convex/_generated/api";
 import {
   SignOutButton,
@@ -12,6 +13,7 @@ export default function Home() {
   const sessionId = useSessionId();
   return (
     <div className="flex flex-col items-center p-20 gap-4">
+      <TitleSearch />
       {sessionId ? (
         <SignOutButton
           className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors
