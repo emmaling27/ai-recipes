@@ -1,6 +1,6 @@
 "use client";
 import { api } from "@/convex/_generated/api";
-import { Doc, Id } from "@/convex/_generated/dataModel";
+import { Id } from "@/convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 
 export default function RecipePage({
@@ -9,5 +9,21 @@ export default function RecipePage({
   params: { recipeId: Id<"recipes"> };
 }) {
   const recipe = useQuery(api.recipe.getRecipe, { id: params.recipeId });
-  return <h1>{recipe?.title}</h1>;
+  return (
+    <>
+      <h1>{recipe?.title}</h1>
+      <h2>Ingredients</h2>
+      <ul>
+        {recipe?.ingredients.map((ingredient) => (
+          <li key={ingredient}>{ingredient}</li>
+        ))}
+      </ul>
+      <h2>Directions</h2>
+      <ol>
+        {recipe?.directions.map((direction) => (
+          <li key={direction}>{direction}</li>
+        ))}
+      </ol>
+    </>
+  );
 }
