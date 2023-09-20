@@ -15,6 +15,8 @@ import type {
   FunctionReference,
 } from "convex/server";
 import type * as auth from "../auth";
+import type * as openai from "../openai";
+import type * as searchRecipes from "../searchRecipes";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -26,6 +28,8 @@ import type * as auth from "../auth";
  */
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  openai: typeof openai;
+  searchRecipes: typeof searchRecipes;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,
