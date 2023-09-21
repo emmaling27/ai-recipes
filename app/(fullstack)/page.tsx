@@ -1,6 +1,6 @@
 "use client";
 
-import TitleSearch from "@/components/SearchBar";
+import TitleSearch from "@/components/TitleSearch";
 import { api } from "@/convex/_generated/api";
 import {
   SignOutButton,
