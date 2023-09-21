@@ -1,43 +1,26 @@
 "use client";
+import { FakeWordList } from "@/components/helpers/FakeWordList";
 import { StickyHeader } from "@/components/layout/sticky-header";
-import { StickySidebar } from "@/components/layout/sticky-sidebar";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { RecipeTitle } from "@/lib/types";
-import { useAction, useQuery } from "convex/react";
-import Link from "next/link";
-import { useState } from "react";
+import { useQuery } from "convex/react";
 
 export default function RecipePage({
   params,
 }: {
   params: { recipeId: Id<"recipes"> };
 }) {
-  const recipeId = params.recipeId;
-  const recipe = useQuery(api.recipe.getRecipe, { id: recipeId });
-  const similarRecipesAction = useAction(api.recipe.similarRecipes);
-  const [similarRecipes, setSimilarRecipes] = useState<RecipeTitle[]>([]);
-  const fetchSimilarRecipes = async () => {
-    const similarRecipes = await similarRecipesAction({
-      recipeId,
-      embeddingId: recipe?.embeddingId,
-    });
-    setSimilarRecipes(similarRecipes);
-  };
-  fetchSimilarRecipes();
+  const recipe = useQuery(api.recipe.getRecipe, { id: params.recipeId });
   return (
     <>
       <StickyHeader className="p-2">{recipe?.title}</StickyHeader>
+      {/* For Footer to appear at the bottom, and the page
+              to not have unnecessary scrollbar, the subtrahend
+              inside calc() must be the same height as the header + footer */}
       <div className="grid grid-cols-[240px_minmax(0,1fr)]">
         <StickySidebar className="top-[calc(2.5rem+1px)] h-[calc(100vh-(5rem+2px))]">
-          <h2>Similar recipes</h2>
-          <ul>
-            {similarRecipes.map((recipe) => (
-              <li key={recipe._id}>
-                <Link href={`/recipe/${recipe._id}`}>{recipe.title}</Link>
-              </li>
-            ))}
-          </ul>
+          <div>Sticky sidebar</div>
+          <FakeWordList count={60} length={[4, 15]} />
         </StickySidebar>
         <main className="h-[calc(100vh-(5rem+2px))] p-4">
           <div className="w-full h-full overflow-scroll">
