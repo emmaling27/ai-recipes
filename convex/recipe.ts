@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { action, query } from "./_generated/server";
+import { action, mutation, query } from "./_generated/server";
 import { api } from "./_generated/api";
 import { RecipeTitle } from "../lib/types";
 
@@ -68,5 +68,28 @@ export const getEmbedding = query({
   args: { id: v.id("recipe_embeddings") },
   handler: async (ctx, { id }) => {
     return await ctx.db.get(id);
+  },
+});
+
+export const insertGlutenFreeRecipe = mutation({
+  args: {
+    NER: v.array(v.string()),
+    directions: v.array(v.string()),
+    ingredients: v.array(v.string()),
+    title: v.string(),
+    originalRecipe: v.id("recipes"),
+  },
+  handler: async (
+    ctx,
+    { NER, directions, ingredients, title, originalRecipe }
+  ) => {
+    const recipeId = await ctx.db.insert("glutenFreeRecipes", {
+      NER,
+      directions,
+      ingredients,
+      title,
+      originalRecipe,
+    });
+    return recipeId;
   },
 });

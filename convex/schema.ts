@@ -17,6 +17,14 @@ export default defineSchema({
     .searchIndex("search_title", {
       searchField: "title",
     }),
+  glutenFreeRecipes: defineTable({
+    NER: v.array(v.string()),
+    directions: v.array(v.string()),
+    ingredients: v.array(v.string()),
+    title: v.string(),
+    embeddingId: v.optional(v.id("recipe_embeddings")),
+    originalRecipe: v.id("recipes"),
+  }),
   recipe_embeddings: defineTable({
     embedding: v.array(v.float64()),
   }).vectorIndex("by_embedding", {

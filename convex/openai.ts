@@ -1,11 +1,18 @@
 import OpenAI from "openai";
 import {
+  action,
   internalAction,
   internalMutation,
   internalQuery,
+  mutation,
 } from "./_generated/server";
-import { internal } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import { v } from "convex/values";
+import { Doc } from "./_generated/dataModel";
+import { ChatCompletion } from "openai/resources/chat";
+
+const GLUTEN_FREE_PROMPT =
+  "Create a gluten free version of the following recipe and return it in the same JSON format as the original recipe.";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -16,7 +23,7 @@ export const backfillEmbeddings = internalAction({
   handler: async (ctx) => {
     let recipes = await ctx.runQuery(internal.openai.unembeddedRecipes, {});
     while (recipes.length > 0) {
-      const input = recipes.map((recipe) =>
+      const input = recipes.map((recipe: Doc<"recipes">) =>
         [recipe.title, recipe.ingredients, recipe.directions].join(" ")
       );
       const response = await openai.embeddings.create({
@@ -52,5 +59,51 @@ export const unembeddedRecipes = internalQuery({
       .withIndex("by_embedding", (q) => q.eq("embeddingId", undefined))
       .take(50);
     return recipes;
+  },
+});
+
+export const generateGlutenFreeRecipe = action({
+  args: { recipeId: v.id("recipes") },
+  handler: async (ctx, { recipeId }) => {
+    const recipe: Doc<"recipes"> | null = await ctx.runQuery(
+      api.recipe.getRecipe,
+      {
+        id: recipeId,
+      }
+    );
+    if (!recipe) {
+      throw new Error(`Could not find recipe ${recipeId}`);
+    }
+    const response: ChatCompletion = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "user",
+          content: GLUTEN_FREE_PROMPT,
+        },
+        {
+          role: "user",
+          content: JSON.stringify({
+            NER: recipe.NER,
+            directions: recipe.directions,
+            ingredients: recipe.ingredients,
+            title: recipe.title,
+          }),
+        },
+      ],
+    });
+    const content = response.choices[0].message.content;
+    if (content === null) {
+      throw new Error("OpenAI returned null response");
+    }
+    const json = JSON.parse(content);
+    await ctx.runMutation(api.recipe.insertGlutenFreeRecipe, {
+      NER: json.NER,
+      directions: json.directions,
+      ingredients: json.ingredients,
+      title: json.title,
+      originalRecipe: recipeId,
+    });
+    return response;
   },
 });
