@@ -4,7 +4,6 @@ import {
   internalAction,
   internalMutation,
   internalQuery,
-  mutation,
 } from "./_generated/server";
 import { api, internal } from "./_generated/api";
 import { v } from "convex/values";
@@ -97,6 +96,12 @@ export const generateGlutenFreeRecipe = action({
       throw new Error("OpenAI returned null response");
     }
     const json = JSON.parse(content);
+    const gfRecipe = {
+      NER: json.NER,
+      directions: json.directions,
+      ingredients: json.ingredients,
+      title: json.title,
+    };
     await ctx.runMutation(api.recipe.insertGlutenFreeRecipe, {
       NER: json.NER,
       directions: json.directions,
@@ -104,6 +109,6 @@ export const generateGlutenFreeRecipe = action({
       title: json.title,
       originalRecipe: recipeId,
     });
-    return response;
+    return gfRecipe;
   },
 });

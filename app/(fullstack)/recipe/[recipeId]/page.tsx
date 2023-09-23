@@ -1,9 +1,10 @@
 "use client";
 import { StickyHeader } from "@/components/layout/sticky-header";
 import { StickySidebar } from "@/components/layout/sticky-sidebar";
+import { Button } from "@/components/ui/button";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { RecipeTitle } from "@/lib/types";
+import { RecipeContent, RecipeTitle } from "@/lib/types";
 import { useAction, useQuery } from "convex/react";
 import Link from "next/link";
 import { useState } from "react";
@@ -16,6 +17,7 @@ export default function RecipePage({
   const recipeId = params.recipeId;
   const recipe = useQuery(api.recipe.getRecipe, { id: recipeId });
   const similarRecipesAction = useAction(api.recipe.similarRecipes);
+  const gfRecipeAction = useAction(api.openai.generateGlutenFreeRecipe);
   const [similarRecipes, setSimilarRecipes] = useState<RecipeTitle[]>([]);
   const fetchSimilarRecipes = async () => {
     const similarRecipes = await similarRecipesAction({
@@ -25,6 +27,14 @@ export default function RecipePage({
     setSimilarRecipes(similarRecipes);
   };
   fetchSimilarRecipes();
+  const [gfRecipe, setGfRecipe] = useState<RecipeContent | null>();
+  const fetchGfRecipe = async () => {
+    const gfRecipe = await gfRecipeAction({
+      recipeId,
+    });
+    console.log(gfRecipe);
+    setGfRecipe(gfRecipe);
+  };
   return (
     <>
       <StickyHeader className="p-2">{recipe?.title}</StickyHeader>
@@ -55,6 +65,25 @@ export default function RecipePage({
                 ))}
               </ol>
             </div>
+            <Button variant="outline" onClick={fetchGfRecipe}>
+              Make it gluten free!
+            </Button>
+            {gfRecipe && (
+              <>
+                <h2>Ingredients</h2>
+                <ul>
+                  {gfRecipe.ingredients.map((ingredient) => (
+                    <li key={ingredient}>{ingredient}</li>
+                  ))}
+                </ul>
+                <h2>Directions</h2>
+                <ol>
+                  {gfRecipe.directions.map((direction) => (
+                    <li key={direction}>{direction}</li>
+                  ))}
+                </ol>
+              </>
+            )}
           </div>
         </main>
       </div>

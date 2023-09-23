@@ -4,3 +4,9 @@ export type RecipeTitle = {
   _id: Id<"recipes">;
   title: string;
 };
+
+export type RecipeContent = {
+  title: string;
+  ingredients: string[];
+  directions: string[];
+}
