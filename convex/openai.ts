@@ -13,6 +13,9 @@ import { ChatCompletion } from "openai/resources/chat";
 const GLUTEN_FREE_PROMPT =
   "Create a gluten free version of the following recipe and return it in the same JSON format as the original recipe.";
 
+const VEGAN_PROMPT =
+  "Create a vegan version of the following recipe. Don't just describe the new ingredients as vegan, actually find substitutes. Return it in the same JSON format as the original recipe.";
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
   organization: process.env.OPENAI_ORG_ID,
@@ -61,9 +64,12 @@ export const unembeddedRecipes = internalQuery({
   },
 });
 
-export const generateGlutenFreeRecipe = action({
-  args: { recipeId: v.id("recipes") },
-  handler: async (ctx, { recipeId }) => {
+export const generateNewRecipe = action({
+  args: {
+    recipeId: v.id("recipes"),
+    dietaryRestriction: v.union(v.literal("glutenFree"), v.literal("vegan")),
+  },
+  handler: async (ctx, { recipeId, dietaryRestriction }) => {
     const recipe: Doc<"recipes"> | null = await ctx.runQuery(
       api.recipe.getRecipe,
       {
@@ -73,12 +79,14 @@ export const generateGlutenFreeRecipe = action({
     if (!recipe) {
       throw new Error(`Could not find recipe ${recipeId}`);
     }
+    const prompt =
+      dietaryRestriction === "glutenFree" ? GLUTEN_FREE_PROMPT : VEGAN_PROMPT;
     const response: ChatCompletion = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [
         {
           role: "user",
-          content: GLUTEN_FREE_PROMPT,
+          content: prompt,
         },
         {
           role: "user",
@@ -96,19 +104,19 @@ export const generateGlutenFreeRecipe = action({
       throw new Error("OpenAI returned null response");
     }
     const json = JSON.parse(content);
-    const gfRecipe = {
+    const newRecipe = {
       NER: json.NER,
       directions: json.directions,
       ingredients: json.ingredients,
       title: json.title,
     };
-    await ctx.runMutation(api.recipe.insertGlutenFreeRecipe, {
-      NER: json.NER,
-      directions: json.directions,
-      ingredients: json.ingredients,
-      title: json.title,
-      originalRecipe: recipeId,
-    });
-    return gfRecipe;
+    // await ctx.runMutation(api.recipe.insertGlutenFreeRecipe, {
+    //   NER: json.NER,
+    //   directions: json.directions,
+    //   ingredients: json.ingredients,
+    //   title: json.title,
+    //   originalRecipe: recipeId,
+    // });
+    return newRecipe;
   },
 });

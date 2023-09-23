@@ -10,3 +10,5 @@ export type RecipeContent = {
   ingredients: string[];
   directions: string[];
 }
+
+export type DietaryRestriction = "glutenFree" | "vegan";

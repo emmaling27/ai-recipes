@@ -4,7 +4,7 @@ import { StickySidebar } from "@/components/layout/sticky-sidebar";
 import { Button } from "@/components/ui/button";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { RecipeContent, RecipeTitle } from "@/lib/types";
+import { DietaryRestriction, RecipeContent, RecipeTitle } from "@/lib/types";
 import { useAction, useQuery } from "convex/react";
 import Link from "next/link";
 import { useState } from "react";
@@ -17,7 +17,7 @@ export default function RecipePage({
   const recipeId = params.recipeId;
   const recipe = useQuery(api.recipe.getRecipe, { id: recipeId });
   const similarRecipesAction = useAction(api.recipe.similarRecipes);
-  const gfRecipeAction = useAction(api.openai.generateGlutenFreeRecipe);
+  const newRecipeAction = useAction(api.openai.generateNewRecipe);
   const [similarRecipes, setSimilarRecipes] = useState<RecipeTitle[]>([]);
   const fetchSimilarRecipes = async () => {
     const similarRecipes = await similarRecipesAction({
@@ -27,13 +27,14 @@ export default function RecipePage({
     setSimilarRecipes(similarRecipes);
   };
   fetchSimilarRecipes();
-  const [gfRecipe, setGfRecipe] = useState<RecipeContent | null>();
-  const fetchGfRecipe = async () => {
-    const gfRecipe = await gfRecipeAction({
+  const [newRecipe, setNewRecipe] = useState<RecipeContent | null>();
+  const fetchNewRecipe = async (dietaryRestriction: DietaryRestriction) => {
+    const newRecipe = await newRecipeAction({
       recipeId,
+      dietaryRestriction,
     });
-    console.log(gfRecipe);
-    setGfRecipe(gfRecipe);
+
+    setNewRecipe(newRecipe);
   };
   return (
     <>
@@ -65,20 +66,26 @@ export default function RecipePage({
                 ))}
               </ol>
             </div>
-            <Button variant="outline" onClick={fetchGfRecipe}>
+            <Button
+              variant="outline"
+              onClick={() => fetchNewRecipe("glutenFree")}
+            >
               Make it gluten free!
             </Button>
-            {gfRecipe && (
+            <Button variant="outline" onClick={() => fetchNewRecipe("vegan")}>
+              Make it vegan!
+            </Button>
+            {newRecipe && (
               <>
                 <h2>Ingredients</h2>
                 <ul>
-                  {gfRecipe.ingredients.map((ingredient) => (
+                  {newRecipe.ingredients.map((ingredient) => (
                     <li key={ingredient}>{ingredient}</li>
                   ))}
                 </ul>
                 <h2>Directions</h2>
                 <ol>
-                  {gfRecipe.directions.map((direction) => (
+                  {newRecipe.directions.map((direction) => (
                     <li key={direction}>{direction}</li>
                   ))}
                 </ol>
